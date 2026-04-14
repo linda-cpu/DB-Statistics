@@ -1,0 +1,243 @@
+<p-toast />
+<div class="p-6 min-h-screen">
+  <div class="flex items-center gap-4 mb-6">
+    <i class="pi pi-chart-bar text-[#f01414] text-3xl"></i>
+    <h1 class="text-2xl font-bold">Statistische Auswertung</h1>
+  </div>
+
+  <p-panel header="Abfrageparameter" [toggleable]="true" styleClass="mb-6 shadow-sm">
+    <ng-template #icons>
+      <button
+        class="p-panel-header-icon p-link mr-2"
+        (click)="saveAsFavorite()"
+        aria-label="Als Favorit speichern"
+      >
+        @if (!isHeartAnimating()) {
+          <i class="pi pi-heart text-gray-500 hover:text-[#f01414]"></i>
+        } @else {
+          <i class="pi pi-heart-fill text-[#f01414]"></i>
+        }
+      </button>
+    </ng-template>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-2">
+      <div class="flex flex-col gap-2">
+        <label class="font-bold text-gray-700 text-sm">Bahnhof *</label>
+        <p-select
+          filter="true"
+          filterBy="name"
+          [options]="allStations()"
+          (onChange)="loadLines()"
+          optionLabel="name"
+          optionValue="eva"
+          [(ngModel)]="filter.station"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          required="true"
+        >
+        </p-select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-bold text-gray-700 text-sm">Art der Statistik *</label>
+        <p-select
+          [options]="[
+            { label: 'Verspätungshistorie', value: 'DELAY_HISTORY' },
+            { label: 'Top verzögerte Linien', value: 'TOP_DELAYED_LINES' },
+            { label: 'Top Verspätungsgründe', value: 'TOP_DELAY_REASONS' },
+          ]"
+          [(ngModel)]="filter.statType"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          required="true"
+        >
+        </p-select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-bold text-gray-700 text-sm">Zeitraum</label>
+        <p-datepicker
+          [(ngModel)]="filter.range"
+          selectionMode="range"
+          [showIcon]="true"
+          placeholder="TT.MM.JJJJ - TT.MM.JJJJ"
+          dateFormat="dd.mm.yy"
+          [maxDate]="today"
+          [minDate]="minDate"
+          styleClass="w-full"
+        >
+        </p-datepicker>
+      </div>
+
+      @if (filter.statType === 'DELAY_HISTORY') {
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-gray-700 text-sm">Linie</label>
+          <p-select
+            filter="true"
+            filterBy="name"
+            [options]="allLines()"
+            [(ngModel)]="filter.line"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [showClear]="true"
+          >
+          </p-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-gray-700 text-sm">Metrik</label>
+          <p-select
+            filter="true"
+            filterBy="name"
+            [options]="allMetrics"
+            [(ngModel)]="filter.metric"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            required="true"
+          >
+          </p-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-gray-700 text-sm">Intervall</label>
+          <p-select
+            filter="true"
+            filterBy="name"
+            [options]="allIntervalls"
+            [(ngModel)]="filter.intervall"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            required="true"
+          >
+          </p-select>
+        </div>
+      }
+
+      @if (filter.statType === 'TOP_DELAYED_LINES' || filter.statType === 'TOP_DELAY_REASONS') {
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-gray-700 text-sm">Limit</label>
+          <p-inputnumber
+            inputId="integeronly"
+            [min]="1"
+            [showButtons]="true"
+            [(ngModel)]="filter.limit"
+          />
+        </div>
+      }
+
+      <div class="flex items-end">
+        <p-button
+          label="Statistik generieren"
+          icon="pi pi-search"
+          (onClick)="generateStatistics()"
+          styleClass="w-full !bg-[#f01414] !border-none py-2.5"
+          [disabled]="!filter.station || !filter.statType || isLoading()"
+          [pTooltip]="
+            !filter.station || !filter.statType
+              ? 'Bitte füllen Sie alle mit * markierten Felder aus'
+              : ''
+          "
+        >
+        </p-button>
+      </div>
+    </div>
+  </p-panel>
+
+  @if (isLoading()) {
+    <div class="grid grid-cols-1 gap-6 animate-pulse">
+      <p-card>
+        <div class="flex flex-col md:flex-row gap-8">
+          <div class="w-full md:w-2/3">
+            <p-skeleton width="100%" height="256px"></p-skeleton>
+          </div>
+          <div class="w-full md:w-1/3">
+            <p-skeleton height="2rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton height="1.5rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton height="1.5rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton height="1.5rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton height="1.5rem"></p-skeleton>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  }
+
+  @if (resultsLoaded() && !isLoading()) {
+    @if (statSummary().length > 0) {
+      <div class="grid grid-cols-1 gap-6 animate-fadein">
+        <p-card header="Auswertungsergebnis">
+          <div class="flex flex-col md:flex-row gap-8">
+            <div class="w-full md:w-2/3 h-64 relative">
+              <p-chart type="bar" [data]="chartData()" [options]="chartOptions" height="100%">
+              </p-chart>
+            </div>
+            <div class="w-full md:w-1/3">
+              <p-table [value]="statSummary()" styleClass="p-datatable-sm">
+                <ng-template #header>
+                  <tr>
+                    @if (filter2.statType === 'TOP_DELAY_REASONS') {
+                      <th>Code</th>
+                      <th>Anzahl</th>
+                      <th>Grund</th>
+                    }
+
+                    @if (filter2.statType === 'TOP_DELAYED_LINES') {
+                      <th>Linie</th>
+                      <th>Anzahl</th>
+                    }
+
+                    @if (filter2.statType === 'DELAY_HISTORY' && filter2.metric === 'COUNT') {
+                      <th>Zeitraum</th>
+                      <th>Anzahl</th>
+                    }
+                    @if (filter2.statType === 'DELAY_HISTORY' && filter2.metric === 'PERCENT') {
+                      <th>Zeitraum</th>
+                      <th>Prozent</th>
+                    }
+                  </tr>
+                </ng-template>
+                <ng-template #body let-item>
+                  <tr>
+                    <td>
+                      @if (filter2.statType === 'DELAY_HISTORY') {
+                        {{ item.label | date: 'dd.MM.yyyy' }}
+                      } @else {
+                        {{ item.label }}
+                      }
+                    </td>
+                    <td class="font-bold text-right">
+                      @if (filter2.metric === 'PERCENT' && filter2.statType === 'DELAY_HISTORY') {
+                        {{ item.value | number: '2.2' }}%
+                      } @else {
+                        {{ item.value }}
+                      }
+                    </td>
+                    @if (filter2.statType === 'TOP_DELAY_REASONS') {
+                      <td>{{ item.description }}</td>
+                    }
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    } @else {
+      <div class="text-center p-20 bg-white rounded-lg shadow-sm border border-gray-200">
+        <i class="pi pi-database text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 font-medium">Keine Daten für diesen Zeitraum gefunden.</p>
+        <p class="text-sm text-gray-400">
+          Versuchen Sie es mit einem anderen Bahnhof oder prüfen Sie die DB-Verbindung.
+        </p>
+      </div>
+    }
+  }
+
+  @if (!isLoading() && !resultsLoaded()) {
+    <div
+      class="flex flex-col items-center justify-center py-20 text-gray-400 border-2 border-dashed rounded-lg"
+    >
+      <i class="pi pi-filter-slash text-5xl mb-4"></i>
+      <p>Bitte wählen Sie die Parameter aus und starten Sie die Abfrage.</p>
+    </div>
+  }
+</div>

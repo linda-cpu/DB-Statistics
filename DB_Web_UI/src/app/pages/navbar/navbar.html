@@ -1,0 +1,29 @@
+<p-menubar
+  [model]="items"
+  [pt]="{
+    root: { class: 'h-20 px-6 flex items-center bg-white border-b-gray-500 ' },
+    rootList: { class: 'gap-6 divide-gray-500' },
+    itemLink: { class: 'flex items-center gap-3 p-3 hover:bg-gray-100 transition-all' },
+    itemIcon: { class: 'text-gray-500 text-xl' },
+    itemLabel: { class: 'text-gray-600 font-medium' },
+  }"
+>
+  <ng-template #start>
+    <div routerLink="/statistics" class="flex items-center mr-4">
+      <img src="favicon.svg" alt="DB Logo" class="h-10 w-10 mr-2" />
+      <span class="font-bold text-xl">DB-Stats</span>
+    </div>
+  </ng-template>
+
+  <ng-template #end>
+    <div class="flex items-center gap-4">
+      <i class="pi pi-sign-out text-2xl text-gray-600 cursor-pointer" (click)="authService.logout()"></i>
+      <p-avatar
+        icon="pi pi-user"
+        shape="circle"
+        styleClass="!bg-gray-200 !text-gray-500 cursor-pointer"
+        routerLink="/profile">
+      </p-avatar>
+    </div>
+  </ng-template>
+</p-menubar>

@@ -1,0 +1,124 @@
+<!-- User-Profile -->
+<div class="flex justify-center items-start pt-10 min-h-screen bg-gray-50">
+  <p-card [style]="{ width: '450px' }" styleClass="shadow-lg border-t-4 border-[#f01414]">
+    <div class="flex flex-col items-center mb-8">
+      <p-avatar
+        icon="pi pi-user"
+        size="xlarge"
+        shape="circle"
+        styleClass="!bg-gray-200 !text-gray-500 mb-4">
+      </p-avatar>
+
+      <h2 class="text-2xl font-bold text-gray-800">{{ user().username }}</h2>
+      <p-tag [value]="user().role" [severity]="this.user().role === 'ADMIN' ? 'danger' : 'info'" class="mt-2"></p-tag>
+    </div>
+
+    <div class="space-y-6">
+      <div class="flex flex-col gap-1 border-b pb-2">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Benutzername</span>
+        <span class="text-lg text-gray-700">{{ user().username }}</span>
+      </div>
+
+      <div class="flex flex-col gap-1 border-b pb-2">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Berechtigung</span>
+        <span class="text-lg text-gray-700">{{ getRoleLabel() }}</span>
+      </div>
+    </div>
+
+    <ng-template #footer>
+      <div class="flex justify-between items-center pt-4">
+        <p-button
+          label="Profil löschen"
+          icon="pi pi-trash"
+          [outlined]="true"
+          styleClass="!text-[#f01414] !border-[#f01414] hover:!bg-red-50"
+          (onClick)="isDeleteDialogVisible = true">
+        </p-button>
+        <p-button
+          label="Profil bearbeiten"
+          icon="pi pi-user-edit"
+          styleClass="!bg-[#f01414] !border-none"
+          (onClick)="openEdit()">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Edit User Dialog -->
+<p-dialog
+  header="Profil & Sicherheit bearbeiten"
+  [(visible)]="isEditDialogVisible"
+  [modal]="true"
+  [style]="{width: '400px'}"
+  styleClass="db-dialog">
+
+  <div class="flex flex-col gap-6 pt-2">
+    <div class="flex flex-col gap-3">
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-wider italic">Persönliche Daten</span>
+      <div class="flex flex-col gap-1">
+        <label for="username" class="text-sm font-semibold">Benutzername</label>
+        <input id="username" pInputText [(ngModel)]="editUser().username" class="w-full !focus:border-[#f01414] !border-b-gray-500" />
+      </div>
+    </div>
+
+    @if (user().role == "ADMIN") {
+    <div class="flex flex-col gap-1">
+      <label for="role" class="text-sm font-semibold">Berechtigung</label>
+      <select id="role" pInputText [(ngModel)]="editUser().role" class="w-full !focus:border-[#f01414]">
+        @for(role of roles; track role.value) {
+          <option [value]="role.value">{{ role.label }}</option>
+        }
+      </select>
+    </div>
+    }
+
+    <div class="flex flex-col gap-3 border-t pt-4">
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-wider italic">Sicherheit (Nur bei Änderung ausfüllen)</span>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">Neues Passwort</label>
+        <p-password
+          [(ngModel)]="editUser().password"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full !focus:border-[#f01414]"
+          [feedback]="true"
+          promptLabel="Passwortstärke wählen"
+          weakLabel="Schwach" mediumLabel="Mittel" strongLabel="Stark">
+        </p-password>
+      </div>
+    </div>
+
+    <p-button
+      label="Alle Änderungen speichern"
+      icon="pi pi-check"
+      (onClick)="saveUser()"
+      styleClass="w-full !bg-[#f01414] !border-none mt-2 shadow-md">
+    </p-button>
+  </div>
+</p-dialog>
+
+<!-- Delete User Confirmation Dialog -->
+<p-dialog
+  header = "Profil löschen"
+  [(visible)]="isDeleteDialogVisible"
+  [modal]="true"
+  [style]="{width: '400px'}"
+  styleClass="db-dialog">
+  <div class="flex flex-col gap-6 pt-2">
+    <span class="text-gray-700">Möchten Sie Ihr Profil wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.</span>
+    <div class="flex justify-end gap-4">
+      <p-button
+        label="Abbrechen"
+        icon="pi pi-times"
+        (onClick)="isDeleteDialogVisible = false"
+        styleClass="!bg-gray-200 !text-gray-700 !border-none hover:!bg-gray-300">
+      </p-button>
+      <p-button
+        label="Profil löschen"
+        icon="pi pi-trash"
+        (onClick)="deleteUser()"
+        styleClass="!bg-[#f01414] !border-none hover:!bg-[#c81010]">
+      </p-button>
+    </div>
+

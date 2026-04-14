@@ -1,0 +1,82 @@
+<p-toast />
+<div class="p-6 min-h-screen">
+  <div class="flex items-center gap-4 mb-6">
+    <i class="pi pi-file-import db-text-red text-2xl"></i>
+    <h2 class="text-2xl font-bold">Manueller XML-Import</h2>
+  </div>
+
+  <p class="mb-4 text-gray-600">
+    Wählen Sie eine oder mehrere XML-Dateien aus, um den Import der Reisedaten manuell zu starten.
+  </p>
+
+  <p-fileUpload
+    #fileUpload
+    name="xmlFiles[]"
+    [customUpload]="true"
+    (uploadHandler)="onTemplatedUpload($event, fileUpload)"
+    (onSelect)="onSelect($event)"
+    [multiple]="true"
+    accept=".xml"
+    maxFileSize="10000000"
+    chooseLabel="Datei wählen"
+    uploadLabel="Import starten"
+    cancelLabel="Abbrechen"
+    styleClass="db-fileupload"
+  >
+    <ng-template pTemplate="content" let-files>
+      @if (uploading()) {
+        <div class="upload-progress-container">
+          <div class="progress-info">
+            <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i>
+            <span
+              >Verarbeite Dateien: <strong>{{ processedFilesCount() }}</strong> von
+              <strong>{{ totalFilesCount() }}</strong></span
+            >
+          </div>
+
+          <p-progressBar
+            [value]="progressValue()"
+            [showValue]="true"
+            unit="%"
+            [style]="{ height: '1.2rem', 'border-radius': '10px' }"
+            class=""
+          >
+          </p-progressBar>
+
+          <p class="status-subtext">Bitte lassen Sie das Fenster geöffnet...</p>
+        </div>
+      }
+      @if (hasFiles && !uploading()) {
+        <div>
+          <div class="flex flex-col gap-2 p-2">
+            @for (file of files; track file) {
+              <div class="flex items-center justify-between p-3 border rounded bg-gray-50">
+                <div class="flex items-center gap-3">
+                  <i class="pi pi-file-excel db-text-red text-xl"></i>
+                  <span class="font-medium text-sm">{{ file.name }}</span>
+                  <small class="text-gray-500">({{ (file.size / 1024).toFixed(1) }} KB)</small>
+                </div>
+                <button
+                  type="button"
+                  class="p-button p-button-text p-button-danger"
+                  aria-label="Datei entfernen"
+                  (click)="removeFile(file, files)"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @if (!hasFiles) {
+        <div
+          class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 rounded"
+        >
+          <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+          <p>Dateien hierher ziehen oder "Datei wählen" klicken</p>
+        </div>
+      }
+    </ng-template>
+  </p-fileUpload>
+</div>

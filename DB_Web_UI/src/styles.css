@@ -1,0 +1,93 @@
+/* src/styles.css */
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+:root {
+    --db-red: #f01414;
+    --db-red-hover: #c81010;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-family, sans-serif);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- Globale PrimeNG Overrides --- */
+
+/* Fokus-Zustände für alle Inputs (Text, Select, Datepicker) */
+.p-inputtext:focus,
+.p-select:focus-within,
+.p-datepicker:focus-within,
+.p-inputnumber:focus-within {
+    border-color: var(--db-red) !important;
+}
+
+/* Primäre Buttons global auf DB-Rot setzen */
+/* Das erspart dir das ständige !bg-[#f01414] im HTML */
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-danger) {
+    background-color: var(--db-red) !important;
+    border-color: var(--db-red) !important;
+    color: white !important;
+}
+
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-danger):hover {
+    background-color: var(--db-red-hover) !important;
+    border-color: var(--db-red-hover) !important;
+}
+
+/* Outlined Buttons in DB-Rot */
+.p-button-outlined.p-button-danger,
+.db-button-outlined {
+    color: var(--db-red) !important;
+    border-color: var(--db-red) !important;
+}
+
+.p-button-outlined.p-button-danger:hover,
+.db-button-outlined:hover {
+    background-color: rgba(240, 20, 20, 0.05) !important;
+}
+
+/* Checkbox-Farbe */
+.p-checkbox-checked .p-checkbox-box {
+    background-color: var(--db-red) !important;
+    border-color: var(--db-red) !important;
+}
+
+/* --- Eigene DB Utility Klassen --- */
+
+.db-text-red { color: var(--db-red) !important; }
+.db-bg-red { background-color: var(--db-red) !important; }
+.db-border-red { border-color: var(--db-red) !important; }
+
+/* Akzentleiste für Cards/Panels */
+.db-card-accent {
+    border-top: 4px solid var(--db-red) !important;
+}
+
+/* Aktive Seite in der Pagination */
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: var(--db-red) !important;
+    color: white !important;
+}
+
+/* Hover-Effekt auf Seitenzahlen und Navigations-Buttons */
+.p-paginator .p-paginator-pages .p-paginator-page:not(.p-highlight):hover,
+.p-paginator .p-link:not(.p-disabled):hover {
+    background: rgba(240, 20, 20, 0.05) !important;
+    color: var(--db-red) !important;
+}
+
+/* Fokus-Ring der Pagination-Elemente */
+.p-paginator .p-link:focus {
+    box-shadow: 0 0 0 0.2rem rgba(240, 20, 20, 0.25) !important;
+}
+
+/* Falls Dropdowns (Rows per Page) in der Pagination noch grün umrandet sind */
+.p-paginator .p-dropdown:hover {
+    border-color: var(--db-red) !important;
+}
+
+.p-progressbar .p-progressbar-value {
+    background-color: var(--db-red) !important;
+}

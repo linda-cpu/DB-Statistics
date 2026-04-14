@@ -1,0 +1,41 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <p-card [style]="{ width: '380px' }" styleClass="shadow-xl">
+    <div class="text-center mb-6">
+      <img src="favicon.svg" alt="DB Logo" class="h-16 w-16 mx-auto mb-2" />
+      <h2 class="text-2xl font-bold text-gray-800">Registrierung</h2>
+    </div>
+
+    <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-2">
+        <label for="username" class="text-left font-semibold text-gray-700">Benutzername</label>
+        <input pInputText id="username" type="text" [(ngModel)]="username" class="w-full" />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="password" class="text-left font-semibold text-gray-700">Passwort</label>
+        <p-password
+          id="password"
+          [(ngModel)]="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full">
+        </p-password>
+      </div>
+
+      <p-button
+        label="Registrieren"
+        icon="pi pi-user-plus"
+        submit="true"
+        (onClick)="onRegister()"
+        styleClass="w-full !bg-[#f01414] !border-none !hover:bg-[#c81010] transition-colors py-3">
+      </p-button>
+
+      <div class="text-center mt-2">
+        <a routerLink="/login" class="text-sm text-gray-500 hover:text-[#f01414] transition-colors">
+          Bereits Konto? <span class="font-bold">Einloggen</span>
+        </a>
+      </div>
+    </div>
+  </p-card>
+</div>

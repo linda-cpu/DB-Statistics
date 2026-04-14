@@ -1,0 +1,99 @@
+<div class="p-6">
+  <div class="flex items-center gap-4 mb-6">
+    <i class="pi pi-heart-fill text-[#f01414] text-3xl"></i>
+    <h1 class="text-2xl font-bold">Meine gespeicherten Analysen</h1>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (fav of favorites(); track fav.id) {
+      @if(getStationName(fav.stationEva) != 'Wird geladen...') {
+      <p-card [header]="fav.title" styleClass="shadow-md hover:shadow-lg transition-shadow">
+        <div class="flex flex-col gap-2 text-sm text-gray-600">
+          @if(getStationName(fav.stationEva) != 'Wird geladen...') {
+
+          }
+          <div class="flex items-center gap-2">
+            <i class="pi pi-map-marker text-[#f01414]"></i>
+            <span
+              >Bahnhof: <strong>{{ this.getStationName(fav.stationEva) }}</strong></span
+            >
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-chart-line text-[#f01414]"></i>
+            <span
+              >Typ:
+              @switch (fav.chartType) {
+                @case ('TOP_DELAY_REASONS') {
+                  Top Verspätungsgründe
+                }
+                @case ('TOP_DELAYED_LINES') {
+                  Top verspätete Linien
+                }
+                @case ('DELAY_HISTORY') {
+                  Verspätungshistorie
+                }
+                @default {''}
+              }
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            @if(fav.chartType === 'DELAY_HISTORY') {
+              <i class="pi pi-calendar text-[#f01414]"></i>
+              <span>Intervall:
+              @switch (fav.timeInterval) {
+                @case ('DAILY') {
+                  täglich
+                }
+                @case ('WEEKLY') {
+                  wöchentlich
+                }
+                @case ('MONTHLY') {
+                  monatlich
+                }
+                @case ('YEARLY') {
+                  jährlich
+                }
+                @default {''}
+              }
+            </span>
+            }
+            @if(fav.chartType === 'TOP_DELAY_REASONS' || fav.chartType === 'TOP_DELAYED_LINES') {
+              <i class="pi pi-filter text-[#f01414]"></i>
+              <span>
+                Limit: <strong>{{ fav.limit }}</strong>
+              </span>
+            }
+
+          </div>
+        </div>
+
+        <ng-template #footer>
+          <div class="flex justify-between gap-2 mt-4">
+            <p-button
+              label="Laden"
+              icon="pi pi-external-link"
+              (onClick)="loadFavorite(fav)"
+              styleClass="p-button-sm !bg-[#f01414] !border-none"
+            >
+            </p-button>
+            <p-button
+              icon="pi pi-trash"
+              [outlined]="true"
+              (onClick)="deleteFavorite(fav.id!)"
+              styleClass="p-button-sm p-button-danger"
+            >
+            </p-button>
+          </div>
+        </ng-template>
+      </p-card>
+    }
+    }
+  </div>
+
+  @if (favorites().length === 0) {
+    <div class="text-center py-20 text-gray-400">
+      <i class="pi pi-info-circle text-5xl mb-4"></i>
+      <p>Du hast noch keine Favoriten gespeichert.</p>
+    </div>
+  }
+</div>

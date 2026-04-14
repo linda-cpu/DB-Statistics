@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    image: 'mongo:latest'
+    volumes:
+      - mongo-data:/data/db  # Maps internal DB storage to the 'mongo-data' volume
+    container_name: mongodb_container
+    environment:
+      - 'MONGO_INITDB_DATABASE=station_db'
+      - 'MONGO_INITDB_ROOT_PASSWORD=handke'
+      - 'MONGO_INITDB_ROOT_USERNAME=root'
+    ports:
+      - '27017:27017'
+    networks:
+      - db-net
+
+  app:
+    build: .
+    container_name: db_management_app
+    ports:
+      - '8081:8080'
+    depends_on:
+      - mongodb
+    environment:
+      - SPRING_DATA_MONGODB_HOST=mongodb
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_DATABASE=station_db
+      - SPRING_DATA_MONGODB_USERNAME=root
+      - SPRING_DATA_MONGODB_PASSWORD=handke
+    networks:
+      - db-net
+    volumes:
+      - ./xml:/app/data/xml
+
+networks:
+  db-net:
+    driver: bridge
+
+volumes:
+  mongo-data:

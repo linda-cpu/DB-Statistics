@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    container_name: db-statistics-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db_meta
+      SPRING_DATASOURCE_USERNAME: handke
+      SPRING_DATASOURCE_PASSWORD: handke
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - ../DB_Management/xml:/app/data/xml
+  db:
+    image: postgres:16
+    container_name: db_statistics_postgres
+    environment:
+      POSTGRES_USER: handke
+      POSTGRES_PASSWORD: handke
+      POSTGRES_DB: db_meta
+    ports:
+      - "5432:5432"
+    volumes:
+      - DB_Statistics:/var/lib/postgresql/data
+
+volumes:
+  DB_Statistics:

@@ -1,0 +1,123 @@
+### 1. Registrieren (Erstellt einen neuen User)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "Linda",
+  "password": "meinGeheimesPassword123"
+}
+
+### 2. Anmelden (USER)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Linda",
+  "password": "meinGeheimesPassword123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+    client.log("Token wurde erfolgreich gespeichert: " + response.body.token);
+%}
+
+### 2. Anmelden (ADMIN)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+    client.log("Token wurde erfolgreich gespeichert: " + response.body.token);
+%}
+
+### 3. Verfügbare Rollen anzeigen (Für das Frontend)
+GET http://localhost:8080/api/roles/
+Authorization: Bearer {{auth_token}}
+
+### 4. Einen bestimmten User anzeigen
+GET http://localhost:8080/api/users/Leonie
+Authorization: Bearer {{auth_token}}
+
+### 5. User ändern (Update) - Passwort & Rolle
+PATCH http://localhost:8080/api/users/Linda
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "username": "Leonie",
+  "role": "admin",
+  "password": "neuesPassword123"
+}
+
+
+### 6. User löschen
+DELETE http://localhost:8080/api/users/Leonie
+Authorization: Bearer {{auth_token}}
+
+
+### 7. Stationen abfragen
+GET http://localhost:8080/api/stations
+Authorization: Bearer {{auth_token}}
+
+### 8. Stationen abfragen mit Pageination
+GET http://localhost:8080/api/stations?page=1&size=1
+Authorization: Bearer {{auth_token}}
+
+### 9. Station abfragen
+GET http://localhost:8080/api/stations/8010131
+Authorization: Bearer {{auth_token}}
+
+### 10. Station erstellen
+POST http://localhost:8080/api/stations
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "stationName": "Görlitz",
+  "stationEva": 8010131
+}
+
+### 11. Trips eines Bahnhofs abrufen
+GET http://localhost:8080/api/stations/8010131/trips
+Authorization: Bearer {{auth_token}}
+
+### 12. Trips filtern
+GET http://localhost:8080/api/stations/8010131/trips?line=RB65&from=2025-12-21T00:00:00Z&to=2026-01-20T12:00:00Z&page=0&size=2
+Authorization: Bearer {{auth_token}}
+
+### 13. Trips anhand ID abrufen
+GET http://localhost:8080/api/stations/8010131/trips/-6420897253859089585-2512182347-23
+Authorization: Bearer {{auth_token}}
+
+### 14. Delay Reason abfragen
+GET http://localhost:8080//api/delayReasons/1
+Authorization: Bearer {{auth_token}}
+
+### 15. Annotation erstellen
+POST http://localhost:8080/api/stations/8010131/trips/-6420897253859089585-2512182347-23/annotations
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "user_name": "MM",
+  "text": "Dies ist eine Testannotation"
+}
+
+### 16. Annotation ändern
+PATCH http://localhost:8080/api/stations/8010131/trips/-6420897253859089585-2512182347-23/annotations/9b88449f-cd2f-4a09-bd0c-b7a88f009500
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "user_name": "MM",
+  "text": "Dies ist eine geänderte Testannotation"
+}
+
+### 17. Annotation löschen
+DELETE http://localhost:8080/api/stations/8010131/trips/-6420897253859089585-2512182347-23/annotations/652eb207-c479-4042-8d76-a0f3c05ab8e7
+Authorization: Bearer {{auth_token}}

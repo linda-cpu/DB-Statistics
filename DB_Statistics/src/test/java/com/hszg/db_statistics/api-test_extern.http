@@ -1,0 +1,67 @@
+### 1. Registrieren (Erstellt einen neuen User)
+POST http://193.174.103.35:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "Linda",
+  "password": "meinGeheimesPassword123"
+}
+
+### 2. Anmelden (USER)
+POST http://193.174.103.35:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Linda",
+  "password": "meinGeheimesPassword123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+    client.log("Token wurde erfolgreich gespeichert: " + response.body.token);
+%}
+
+### 2. Anmelden (ADMIN)
+POST http://193.174.103.35:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+    client.log("Token wurde erfolgreich gespeichert: " + response.body.token);
+%}
+
+### 3. Verfügbare Rollen anzeigen (Für das Frontend)
+GET http://193.174.103.35:8080/api/roles/
+Authorization: Bearer {{auth_token}}
+
+### 4. Einen bestimmten User anzeigen
+GET http://193.174.103.35:8080/api/users/Leonie
+Authorization: Bearer {{auth_token}}
+
+### 5. User ändern (Update) - Passwort & Rolle
+PATCH http://193.174.103.35:8080/api/users/Linda
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "username": "Leonie",
+  "role": "admin",
+  "password": "neuesPassword123"
+}
+
+### 6. User validieren
+GET http://193.174.103.35:8080/api/auth/validate
+Authorization: Bearer {{auth_token}}
+
+### 7. User löschen
+DELETE http://193.174.103.35:8080/api/users/Leonie
+Authorization: Bearer {{auth_token}}
+
+### 8. Geschützte Statistik abrufen (Mock Daten)
+#GET http://193.174.103.35:8080/api/statistics/stations/8010085/delayed
+#Authorization: Bearer {{auth_token}}

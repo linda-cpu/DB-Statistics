@@ -1,0 +1,13 @@
+package com.hszg.DB_Statictics;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DbStaticticsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DbStaticticsApplication.class, args);
+	}
+
+}
