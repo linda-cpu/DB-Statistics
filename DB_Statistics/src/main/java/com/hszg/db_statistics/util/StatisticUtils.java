@@ -1,7 +1,7 @@
 package com.hszg.db_statistics.util;
 
-import com.hszg.db_statistics.client.dto.trips.TripDto;
-import com.hszg.db_statistics.client.dto.trips.TripScheduleDto;
+import com.hszg.db_statistics.client.management.dto.trips.TripDto;
+import com.hszg.db_statistics.client.management.dto.trips.TripScheduleDto;
 import com.hszg.db_statistics.enums.TimeInterval;
 import lombok.extern.slf4j.Slf4j;
 

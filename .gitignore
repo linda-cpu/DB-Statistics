@@ -27,12 +27,19 @@ target/
 /.nb-gradle/
 build/
 !**/src/main/**/build/
-!**/src/test/
+!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
 
 Requests.http
-application.properties
 
-environment.**.ts
+__pycache__
+DB_ML/.venv
+**/bahndaten_training.csv
+DB_ML/resources/models/
+DB_ML/models/
+*.keras
+*.pkl
+
+

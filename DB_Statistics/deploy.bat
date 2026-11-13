@@ -18,12 +18,12 @@ set LOCAL_JAR=target\db_statistics-0.0.1-SNAPSHOT.jar
 :: --- 1. PROJEKT BAUEN ---
 echo.
 echo [1/4] Baue Java Projekt (Maven)...
-call mvn clean package -DskipTests
-if %errorlevel% neq 0 (
-    echo FEHLER: Build fehlgeschlagen!
-    pause
-    exit /b %errorlevel%
-)
+::call mvn clean package -DskipTests
+::if %errorlevel% neq 0 (
+::    echo FEHLER: Build fehlgeschlagen!
+::    pause
+::    exit /b %errorlevel%
+::)
 
 :: --- 2. ORDNER AUF VM ERSTELLEN ---
 echo.

@@ -1,11 +1,11 @@
 package com.hszg.db_statistics.service;
 
-import com.hszg.db_statistics.client.service.DbManagementApiClient;
-import com.hszg.db_statistics.client.dto.DelayReasonDto;
-import com.hszg.db_statistics.client.dto.annotations.AnnotationDto;
-import com.hszg.db_statistics.client.dto.trips.TripPageResponse;
-import com.hszg.db_statistics.client.dto.trips.TripDto;
-import com.hszg.db_statistics.client.dto.trips.TripScheduleDto;
+import com.hszg.db_statistics.client.management.service.DbManagementApiClient;
+import com.hszg.db_statistics.client.management.dto.DelayReasonDto;
+import com.hszg.db_statistics.client.management.dto.annotations.AnnotationDto;
+import com.hszg.db_statistics.client.management.dto.trips.TripPageResponse;
+import com.hszg.db_statistics.client.management.dto.trips.TripDto;
+import com.hszg.db_statistics.client.management.dto.trips.TripScheduleDto;
 import com.hszg.db_statistics.enums.MetricType;
 import com.hszg.db_statistics.enums.TimeInterval;
 import com.hszg.db_statistics.dto.StatisticDto;
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 public class StatisticService {
 
     private final DbManagementApiClient dbManagementApiClient;
-    private final WebClient WebClient;
+    private final WebClient dbManagementWebClient;
 
     public List<StatisticDto> getDelaySeries(int stationEva, String line, Instant from, Instant to,
                                              MetricType metricType, TimeInterval interval) {

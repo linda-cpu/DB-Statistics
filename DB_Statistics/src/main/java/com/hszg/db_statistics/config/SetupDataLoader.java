@@ -44,9 +44,12 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         Privilege readData = createPrivilegeIfNotFound("READ_DATA");
         Privilege readDelayReason = createPrivilegeIfNotFound("READ_DELAY_REASON");
         Privilege manageFavorites = createPrivilegeIfNotFound("MANAGE_FAVORITES");
+        Privilege writeStrike = createPrivilegeIfNotFound("WRITE_STRIKE");
+        Privilege readStrike = createPrivilegeIfNotFound("READ_STRIKE");
+        Privilege predictDelay = createPrivilegeIfNotFound("PREDICT_DELAY");
 
-        Role adminRole = createRoleIfNotFound("ADMIN", Arrays.asList(readStats, manageUsers, writeAnnotations, initWrite,  readStation, writeStation, readData, readDelayReason, manageFavorites));
-        createRoleIfNotFound("USER", Arrays.asList(readStats, readData, readStation, writeStation, readDelayReason, manageFavorites));
+        Role adminRole = createRoleIfNotFound("ADMIN", Arrays.asList(readStats, manageUsers, writeAnnotations, initWrite,  readStation, writeStation, readData, readDelayReason, manageFavorites, writeStrike, readStrike, predictDelay));
+        createRoleIfNotFound("USER", Arrays.asList(readStats, readData, readStation, writeStation, readDelayReason, manageFavorites, predictDelay));
 
         if (userRepository.findByUsername("admin").isEmpty()) {
 
