@@ -3,7 +3,6 @@ package com.hszg.DB_Management.XmlDataImport.config;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +22,8 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class WebClientConfig {
 
-	private static final int TIMEOUT = 3000;
+    private static final int CONNECT_TIMEOUT = 5000;
+    private static final int READ_TIMEOUT = 30000; // 30s for large XML responses
 	
 	@Value("${app.service.db.baseurl}")
     private String dbServiceBaseUrl;
@@ -38,10 +38,10 @@ public class WebClientConfig {
     public WebClient webClientWithTimeout() {
         HttpClient httpClient = HttpClient
                 .create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, TIMEOUT)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT)
                 .doOnConnected(connection -> {
-                    connection.addHandlerLast(new ReadTimeoutHandler(TIMEOUT, TimeUnit.MILLISECONDS));
-                    connection.addHandlerLast(new WriteTimeoutHandler(TIMEOUT, TimeUnit.MILLISECONDS));
+                    connection.addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS));
+                    connection.addHandlerLast(new WriteTimeoutHandler(READ_TIMEOUT, TimeUnit.MILLISECONDS));
                 });
         
      // Ensure JAXB is registered for XML processing
@@ -49,6 +49,7 @@ public class WebClientConfig {
                 .codecs(configurer -> {
                     configurer.defaultCodecs().jaxb2Encoder(new Jaxb2XmlEncoder());
                     configurer.defaultCodecs().jaxb2Decoder(new Jaxb2XmlDecoder());
+                    configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024);
                 })
                 .build();
         

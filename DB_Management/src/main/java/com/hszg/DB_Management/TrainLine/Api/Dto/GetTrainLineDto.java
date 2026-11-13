@@ -15,9 +15,11 @@ import lombok.Setter;
 @Setter
 public class GetTrainLineDto {
 
+    @Schema(description = "The station EVA ID", example = "8010131")
     @JsonProperty("station_eva")
 	private int eva;
 	
+    @Schema(description = "List of train lines", example = "[\"S8\", \"RE1\"]")
 	private List<String> lines = new ArrayList<>();
 
 

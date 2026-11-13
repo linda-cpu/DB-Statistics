@@ -7,8 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +27,8 @@ import com.hszg.DB_Management.TrainLine.Database.LinesPerStationEntity;
 import com.hszg.DB_Management.Trip.Annotation.Database.AnnotationEntity;
 import com.hszg.DB_Management.Trip.Api.ITripRepository;
 import com.hszg.DB_Management.Trip.Database.TripStopEntity;
+import com.hszg.DB_Management.XmlDataImport.holidayImport.CachedDayEntity;
+import com.hszg.DB_Management.XmlDataImport.holidayImport.HolidayCacheService;
 import com.hszg.DB_Management.XmlDataImport.modelChangeData.ArrivalDeparture;
 import com.hszg.DB_Management.XmlDataImport.modelChangeData.Message;
 import com.hszg.DB_Management.XmlDataImport.modelChangeData.Stop;
@@ -52,16 +55,20 @@ public class TimetableService {
 	private final IDelayReasonRepository delayReasonRepository;
 	private final IStationRepository stationRepository;
 	private final ITrainLineRepository lineRepository;
+
+	private final HolidayCacheService holidayCacheService;
+	private final GermanStateFinder germanStateFinder;
 	
 	// DB API Date Format: YYMMDDHHMM
 	private static final DateTimeFormatter DB_DATE_FORMAT = DateTimeFormatter.ofPattern("yyMMddHHmm");
-	
-	
+	private static final ZoneId DB_ZONE = ZoneId.of("Europe/Berlin");
 	
 	public TimetableService(DbTimetableClient apiClient, ITripRepository tripRepository, 
 		IStationRepository stationRepository,
 		IDelayReasonRepository delayReasonRepository,
-		ITrainLineRepository lineRepository
+		ITrainLineRepository lineRepository,
+		HolidayCacheService holidayCacheService,
+		GermanStateFinder germanStateFinder
 		) {
 
 		this.apiClient = apiClient;
@@ -69,6 +76,8 @@ public class TimetableService {
 		this.delayReasonRepository = delayReasonRepository;
 		this.stationRepository = stationRepository;
 		this.lineRepository = lineRepository;
+		this.holidayCacheService = holidayCacheService;
+		this.germanStateFinder = germanStateFinder;
 	}
 
 	/**
@@ -76,7 +85,7 @@ public class TimetableService {
 	 * 
 	 * @param pattern
 	 */
-	public StationEntity fetchStationInfo(String pattern) {
+	public StationEntity fetchStationInfo(String pattern, Double latitude, Double longitude) {
 		StationEntity dbStation = null;
 
 		StationInfo stationInfo = apiClient.fetchStationInfo(pattern);
@@ -87,7 +96,7 @@ public class TimetableService {
 			//found exactly one station matching the pattern
 			com.hszg.DB_Management.XmlDataImport.modelStationInfo.Station xmlStation = stationInfo.getStation().get(0);
 			try {
-				dbStation = new StationEntity(Integer.parseInt(xmlStation.getEva()), xmlStation.getName());
+				dbStation = new StationEntity(Integer.parseInt(xmlStation.getEva()), xmlStation.getName(), latitude, longitude);
 			} catch (NumberFormatException e) {
 				log.warn("Invalid station eva format, can not be parsed as Integer: {}", xmlStation.getEva());
 			}
@@ -103,7 +112,6 @@ public class TimetableService {
 	 * @param date
 	 */
 	public void downloadAndImportChangeData(String evaId) {
-
 		// Fetch the change data
 		log.info("Starting fetching change data from DB-API timetable for EVA ID: {}", evaId);
         Timetable xmlDataChange = apiClient.fetchTimetableChange(evaId);
@@ -234,7 +242,6 @@ public class TimetableService {
 			}
 			// real plattform
 			if (stopDB.getPlattformReal() == null && xmlArrival.getChangedPlattform() != null) {
-				
 				try {
 					stopDB.setPlattformReal(Integer.parseInt(xmlArrival.getChangedPlattform()));
 				} catch (NumberFormatException e) {
@@ -285,12 +292,33 @@ public class TimetableService {
 			}
 		}
 
-		// if only one of the planned times is set, set the other one as well
-		if (arrivalPlannedTimeIsSet && !departurePlannedTimeIsSet) {
-			stopDB.setDeparturePlan(stopDB.getArrivalPlan());
-		} else if (!arrivalPlannedTimeIsSet && departurePlannedTimeIsSet) {
-			stopDB.setArrivalPlan(stopDB.getDeparturePlan());
+		if (stopXml.getArrival() == null && stopXml.getDeparture() == null ) {
+			if(stopDB.getDayOfWeek() != null && stopDB.getPublicHoliday() != null && stopDB.getSchoolHoliday() != null) {
+				// do nothing, we have already the information from another stop of the same trip
+			} else {
+				// Fallback if neither arrival nor departure information is available: Set holiday information to null, since we cannot reliably determine it
+				stopDB.setPublicHoliday(null);
+				stopDB.setSchoolHoliday(null);
+				stopDB.setDayOfWeek(null);
+			}
+		} else {
+			// if only one of the planned times is set, set the other one as well
+			if (arrivalPlannedTimeIsSet && !departurePlannedTimeIsSet) {
+				stopDB.setDeparturePlan(stopDB.getArrivalPlan());
+				handleHolidayInfo(stopXml.getArrival(), stopDB);
+			} else if (!arrivalPlannedTimeIsSet && departurePlannedTimeIsSet) {
+				stopDB.setArrivalPlan(stopDB.getDeparturePlan());
+				handleHolidayInfo(stopXml.getDeparture(), stopDB);
+			} else {
+				// if both are set, it doesn't matter which one we use to determine the holiday info, so we can just use the departure information
+				if (stopXml.getDeparture() != null) {
+					handleHolidayInfo(stopXml.getDeparture(), stopDB);
+				} else if (stopXml.getArrival() != null) {
+					handleHolidayInfo(stopXml.getArrival(), stopDB);
+				}
+			}
 		}
+		
 
 		// handle annotations/messages
 
@@ -303,13 +331,96 @@ public class TimetableService {
         return stopDB;
     }
 
+	private void handleHolidayInfo(ArrivalDeparture xmlObject, TripStopEntity stopDB) {
+        if (stopDB.getStationName() == null || xmlObject == null) {
+            return;
+        }
+
+        // specify target time (prefer Changed-Time, otherwise Planned-Time)
+        String targetTime = xmlObject.getPlannedTime();
+        if (targetTime == null || targetTime.isEmpty()) {
+            return;
+        }
+
+        LocalDate localDate = parseDBDate(targetTime);
+        if (localDate == null) {
+            return;
+        }
+
+        // specify day of the week, if not already set
+        if (stopDB.getDayOfWeek() == null) {
+            stopDB.setDayOfWeek(localDate.getDayOfWeek());
+        }
+
+        // 1. Get the station from the DB to access its latitude and longitude
+        StationEntity station = stationRepository.findByName(stopDB.getStationName()).orElse(null);
+
+        if (station != null && station.getLatitude() != 0 && station.getLongitude() != 0) {
+			stopDB.setStationEva(station.getEva()); // make sure the EVA is set, if it wasn't set before
+            
+			// 2. get ISO-Code using Finder (returns "DE-SN" etc.)
+            String subCode = germanStateFinder.identifyState(station.getLatitude(), station.getLongitude());
+
+            if (subCode != null && !subCode.contains("not found")) {
+                // 3. get info from HolidayCacheService
+                CachedDayEntity holidayInfo = holidayCacheService.getHolidayInfo(localDate, subCode);
+
+                stopDB.setPublicHoliday(holidayInfo.getPublicHoliday());
+                stopDB.setSchoolHoliday(holidayInfo.getSchoolHoliday());
+            } else {
+                stopDB.setPublicHoliday(null);
+                stopDB.setSchoolHoliday(null);
+            }
+        } else {
+            // Fallback, if no coordinates are available in the station's DB entry
+            stopDB.setPublicHoliday(null);
+            stopDB.setSchoolHoliday(null);
+        }
+    }
+
+	public void handleHolidayInfo(Instant targetDate, TripStopEntity stopDB) {
+        if (stopDB.getStationName() == null || targetDate == null) {
+            return;
+        }
+
+        LocalDate localDate = targetDate.atZone(ZoneId.of("Europe/Berlin")).toLocalDate();
+
+        // 1. Get the station from the DB to access its latitude and longitude
+        StationEntity station = stationRepository.findByName(stopDB.getStationName()).orElse(null);
+
+        if (station != null && station.getLatitude() != 0 && station.getLongitude() != 0) {
+			stopDB.setStationEva(station.getEva()); // make sure the EVA is set, if it wasn't set before
+            
+			// 2. get ISO-Code using Finder (returns "DE-SN" etc.)
+            String subCode = germanStateFinder.identifyState(station.getLatitude(), station.getLongitude());
+
+            if (subCode != null && !subCode.contains("not found")) {
+                // 3. get info from HolidayCacheService
+                CachedDayEntity holidayInfo = holidayCacheService.getHolidayInfo(localDate, subCode);
+
+                stopDB.setPublicHoliday(holidayInfo.getPublicHoliday());
+                stopDB.setSchoolHoliday(holidayInfo.getSchoolHoliday());
+            } else {
+                stopDB.setPublicHoliday(null);
+                stopDB.setSchoolHoliday(null);
+            }
+        } else {
+            // Fallback, if no coordinates are available in the station's DB entry
+            stopDB.setPublicHoliday(null);
+            stopDB.setSchoolHoliday(null);
+        }
+    }
+
+
+
+
 	private void updateTrainLinePerStation(int stationEva, String line) {
-		if (line == null || line.isBlank()) {
+		// 1. Validation: An EVA of 0 (or negative) is invalid in the DB context
+		if (line == null || line.isBlank() || stationEva <= 0) {
 			return;
 		}
 		
 		lineRepository.findById(stationEva).ifPresentOrElse(
-
 			station -> {
 				if (!station.getLines().contains(line)) {
 					station.getLines().add(line);
@@ -320,7 +431,12 @@ public class TimetableService {
 				LinesPerStationEntity newStationLines = new LinesPerStationEntity();
 				newStationLines.setEva(stationEva);
 				newStationLines.addLine(line);
-				lineRepository.save(newStationLines);
+				
+				try {
+					lineRepository.save(newStationLines);
+				} catch (org.springframework.dao.DuplicateKeyException e) {
+					log.warn("Station " + stationEva + " was parallel already created.");
+				}
 			});
 	}
 
@@ -339,7 +455,7 @@ public class TimetableService {
 			allXmlMessages.addAll(stopXml.getDeparture().getMessages());
 		}
 
-		// 2. Falls Nachrichten vorhanden sind, diese gesammelt verarbeiten
+		// 2. If messges are available, process them together
 		if (!allXmlMessages.isEmpty()) {
 			processXmlMessages(stopDB, allXmlMessages);
 		}
@@ -379,6 +495,8 @@ public class TimetableService {
 				newAnnotation.setCode(messageCode);
 				newAnnotation.setMessageTime(parseDBTime(message.getTimestampCreation()));
 
+
+
 				if (message.getContent() == null || message.getContent().isBlank()) {
 					delayReasonRepository.findById(messageCode)
 							.ifPresent(reason -> newAnnotation.setText(reason.getReason()));
@@ -398,8 +516,20 @@ public class TimetableService {
 	 */
     private Instant parseDBTime(String dbTime) {
         if (dbTime == null || dbTime.isEmpty()) return null;
-        return LocalDateTime.parse(dbTime, DB_DATE_FORMAT)
-                            .toInstant(ZoneOffset.UTC);
+
+        LocalDateTime localDateTime = LocalDateTime.parse(dbTime, DB_DATE_FORMAT);
+		return localDateTime.atZone(DB_ZONE).toInstant();
+    }
+
+	/**
+	 * converts the given datetime string to an LocalDate object
+	 * @param dbTime
+	 * @return
+	 */
+    private LocalDate parseDBDate(String dbTime) {
+        if (dbTime == null || dbTime.isEmpty()) return null;
+
+        return LocalDateTime.parse(dbTime, DB_DATE_FORMAT).toLocalDate();
     }
 
     /**
@@ -441,7 +571,6 @@ public class TimetableService {
 				xmlObject = (Timetable) jaxbUnmarshaller.unmarshal(file);
 				log.info("Successfully converted XML file to Timetable object: " + file.getName());
 			} catch (JAXBException e) {
-				// TODO Auto-generated catch block
 				log.error("Could not convert XML file to Timetable object (see folder failed): " + file.getName());
 				e.printStackTrace();
 				moveFile(file.toPath(), xmlPath + "/failed");

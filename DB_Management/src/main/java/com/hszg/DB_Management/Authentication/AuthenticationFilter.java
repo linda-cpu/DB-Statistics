@@ -1,6 +1,7 @@
 package com.hszg.DB_Management.Authentication;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -10,7 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-//@Sel
 public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final String serviceAPIToken;
@@ -30,7 +30,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         } else {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("text/plain");
-            response.getWriter().write("Invalid or missing API Secret");
-        }
+            
+            try (PrintWriter writer = response.getWriter()) {
+                writer.write("Invalid or missing API Secret");
+                writer.flush(); // Force the data out immediately
+    }       }
     }
 }

@@ -46,9 +46,7 @@ public class GetTripDto {
         info.setTripId(entity.getTripId());
         if (entity.getLine() != null && !entity.getLine().isBlank()) {
             info.setLine(entity.getLine());
-        } /*else if (entity.getTrainCategory() != null && !entity.getTrainCategory().isBlank()) {
-            info.setLine(entity.getTrainCategory().concat(String.valueOf(entity.getTrainNumber())));
-        }*/
+        }
         dto.setTrainInfo(info);
 
         // Map Schedule
@@ -99,9 +97,8 @@ public class GetTripDto {
         info.setTripId(entity.getTripId());
         if (entity.getLine() != null && !entity.getLine().isBlank()) {
             info.setLine(entity.getLine());
-        } /*else if (entity.getTrainCategory() != null && !entity.getTrainCategory().isBlank()) {
-            info.setLine(entity.getTrainCategory().concat(String.valueOf(entity.getTrainNumber())));
-        }*/
+        }
+        // info.setTrainCategory(entity.getTrainCategory());
         dto.setTrainInfo(info);
 
         // Map Schedule

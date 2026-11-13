@@ -15,5 +15,6 @@ public class TrainInfo {
     private String tripId;
 
     private String line; 
+    private String trainCategory;
 
 }

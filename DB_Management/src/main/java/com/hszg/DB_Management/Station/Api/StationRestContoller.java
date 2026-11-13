@@ -1,13 +1,10 @@
 package com.hszg.DB_Management.Station.Api;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -131,21 +128,21 @@ public class StationRestContoller {
 		
 		if (station.getStationName() == null || station.getStationName().isBlank()) {
 			// only eva number is filled --> get missing information from DB-API
-			stationToSave = dbApiService.fetchStationInfo(String.valueOf(station.getStationEva()));
+			stationToSave = dbApiService.fetchStationInfo(String.valueOf(station.getStationEva()), station.getLatitude(), station.getLongitude());
 			if (stationToSave == null) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Station could not be found via external DB-API.");
 			}
 
 		} else if (station.getStationEva() == null) {
 			// only station name is filled --> get missing information from DB-API
-			stationToSave = dbApiService.fetchStationInfo(station.getStationName());
+			stationToSave = dbApiService.fetchStationInfo(station.getStationName(), station.getLatitude(), station.getLongitude());
 			if (stationToSave == null) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Station could not be found via external DB-API.");
 			}
 
 		} else {
 			// both parameters provided
-			stationToSave = dbApiService.fetchStationInfo(String.valueOf(station.getStationEva()));
+			stationToSave = dbApiService.fetchStationInfo(String.valueOf(station.getStationEva()), station.getLatitude(), station.getLongitude());
 			if (stationToSave == null) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Station eva does not exists according to the DB-API.");
 			} else if (!stationToSave.getName().equals(station.getStationName())) {

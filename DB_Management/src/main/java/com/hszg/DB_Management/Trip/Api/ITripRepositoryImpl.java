@@ -54,4 +54,26 @@ public class ITripRepositoryImpl implements ITripRepositoryCustom {
         );
 	}
 
+    @Override
+    public Page<TripStopEntity> findTrips(Instant from, Pageable pageable) {
+        Query query = new Query();
+        
+        if (from != null) {
+            query.addCriteria(Criteria.where("departurePlan").gte(from));
+        } else {
+            // if departurePlan is null, the trip is not included in the results
+            query.addCriteria(Criteria.where("departurePlan").ne(null));
+        }
+        
+        query.with(pageable);
+        
+        List<TripStopEntity> trips = mongoTemplate.find(query, TripStopEntity.class);
+
+        return PageableExecutionUtils.getPage(
+            trips,
+            pageable,
+            () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), TripStopEntity.class)
+        );
+    }
+
 }

@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.hszg.DB_Management.Trip.Annotation.Database.AnnotationEntity;
 import com.mongodb.lang.NonNull;
@@ -27,33 +26,22 @@ public class TripStopBasicEntity {
 	private int stationEva;
 
 	private String stationName;
-	
-	//private String trainCategory;
-	
-	//private int trainNumber;
 
 	private String line;
 	
-	//@Indexed
-	//@Field("arrival_plan")
 	private Instant arrivalPlan;
 	
-	//@Field("arrival_real")
 	private Instant arrivalReal;
 	
-	//@Field("departure_plan")
+	@Indexed(name = "departure_plan_idx")
 	private Instant departurePlan;
 	
-	//@Field("departure_real")
 	private Instant departureReal;
 	
-	//@Field("plattform_plan")
 	private int plattformPlan;
 	
-	//@Field("plattform_real")
 	private Integer plattformReal;
 	
-	//@Field("cancellation_time")
 	private Instant cancellationTime;
 	
 	private List<AnnotationEntity> annotations = new ArrayList<AnnotationEntity>();

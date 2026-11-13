@@ -1,13 +1,9 @@
 package com.hszg.DB_Management.Trip.Annotation.Api;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,11 +17,8 @@ import com.hszg.DB_Management.Trip.Annotation.Api.Dto.AnnotationCreationDto;
 import com.hszg.DB_Management.Trip.Annotation.Api.Dto.AnnotationReturnDto;
 import com.hszg.DB_Management.Trip.Annotation.Database.AnnotationEntity;
 import com.hszg.DB_Management.Trip.Annotation.UserAnnotation.API.IUserAnnotationRepository;
-import com.hszg.DB_Management.Trip.Annotation.UserAnnotation.API.IUserAnnotationRepository;
-import com.hszg.DB_Management.Trip.Annotation.UserAnnotation.Database.UserAnnotationEntity;
 import com.hszg.DB_Management.Trip.Annotation.UserAnnotation.Database.UserAnnotationEntity;
 import com.hszg.DB_Management.Trip.Api.ITripRepository;
-import com.hszg.DB_Management.Trip.Database.TripStopBasicEntity;
 import com.hszg.DB_Management.Trip.Database.TripStopEntity;
 
 import io.swagger.v3.oas.annotations.Operation;

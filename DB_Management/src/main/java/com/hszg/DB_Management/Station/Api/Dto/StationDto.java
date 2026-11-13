@@ -20,17 +20,19 @@ public class StationDto {
 
 	private Integer stationEva;
 	private String stationName;
+	private Double latitude;
+	private Double longitude;
 	
 	public StationEntity toDbStation() {
-		return new StationEntity(this.stationEva, this.stationName);
+		return new StationEntity(this.stationEva, this.stationName, this.latitude, this.longitude);
 	}
 
     public static Page<StationDto> of(Page<StationEntity> stations) {
-		return stations.map(station -> new StationDto(station.getEva(), station.getName()));
+		return stations.map(station -> new StationDto(station.getEva(), station.getName(), station.getLatitude(), station.getLongitude()));
 	}
 
 	public static StationDto of(StationEntity foundStation) {
-		return new StationDto(foundStation.getEva(), foundStation.getName());
+		return new StationDto(foundStation.getEva(), foundStation.getName(), foundStation.getLatitude(), foundStation.getLongitude());
 	}
 
 }

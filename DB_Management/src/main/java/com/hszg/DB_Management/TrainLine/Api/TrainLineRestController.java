@@ -13,13 +13,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-@RequestMapping("stations/{stationEva}/lines")
+@RequestMapping("stations")
 public class TrainLineRestController {
 
     private ITrainLineRepository repository;
@@ -44,7 +46,7 @@ public class TrainLineRestController {
 			content = {@Content(mediaType = "plain/text")}
 		)
 	})
-    @GetMapping()
+    @GetMapping("/{stationEva}/lines")
     public GetTrainLineDto getTrainLineOfStation(@PathVariable int stationEva) {
         
         
@@ -60,5 +62,14 @@ public class TrainLineRestController {
         return GetTrainLineDto.of(entity);
     }
     
+    @GetMapping("/lines")
+    public List<GetTrainLineDto> getAllTrainLinesPerStation() {
+        List<LinesPerStationEntity> entities = repository.findAll();
+        List<GetTrainLineDto> dtos = entities.stream()
+            .map(GetTrainLineDto::of)
+            .toList();
+
+        return dtos;
+    }
 }
 	

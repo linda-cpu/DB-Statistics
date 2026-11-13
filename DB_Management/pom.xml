@@ -13,19 +13,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>DB_Management</name>
 	<description>prepares the data from the API of the Deutsche Bahn (DB)</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
 	<properties>
 		<java.version>25</java.version>
 		<start-class>com.hszg.DB_Management.DbManagementApplication</start-class>
@@ -63,7 +50,7 @@
 		<!-- more spring boot -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -86,6 +73,12 @@
 	        <groupId>com.sun.xml.bind</groupId>
 	        <artifactId>jaxb-impl</artifactId>
 	    </dependency>
+
+		<!-- for working with json parsing and binding (from Weather-API) -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
 	
 		<!-- for logging -->
 	    <dependency>

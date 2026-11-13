@@ -12,7 +12,15 @@ public class AuthenticationFilterConfig {
     public FilterRegistrationBean<AuthenticationFilter> appAuthenticationFilter(@Value("${app.api.token}") String apiToken) {
         FilterRegistrationBean<AuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new AuthenticationFilter(apiToken));
-        registrationBean.addUrlPatterns("/stations/*", "/delayReason/*", "/import/*", "/annotations/*", "/trips/*");
+        registrationBean.addUrlPatterns("/stations/*", "/delayReason/*", "/import/*", "/annotations/*", "/trips/*", "/strikes/*");
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<AuthenticationFilter> aiappAuthenticationFilter(@Value("${ai.app.api.token}") String aiapiToken) {
+        FilterRegistrationBean<AuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new AuthenticationFilter(aiapiToken));
+        registrationBean.addUrlPatterns("/aiData/*", "/predictionData/*");
         return registrationBean;
     }
 }

@@ -18,9 +18,17 @@ public class StationEntity {
 	@Field("name")
 	private String name;
 
-	public StationEntity(int eva, String name) {
+	@Field("latitude")
+	private Double latitude;
+
+	@Field("longitude")
+	private Double longitude;
+
+	public StationEntity(int eva, String name, Double latitude, Double longitude) {
 		this.eva = eva;
 		this.name = name;
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 	
 }

@@ -11,4 +11,6 @@ public interface ITripRepositoryCustom {
 
 	Page<TripStopEntity> findTrips(int stationEva, Instant from, Instant to, String line,
 		Pageable pageable);
+
+	Page<TripStopEntity> findTrips(Instant from, Pageable pageable);
 }
