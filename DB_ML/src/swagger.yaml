@@ -1,0 +1,92 @@
+openapi: 3.0.0
+info:
+  title: DB Delay Prediction ML-Service API
+  description: API documentation for the neural network-based train delay prediction service.
+  version: 1.0.0
+paths:
+  /train:
+    post:
+      summary: Trigger background model training
+      description: Starts the asynchronous data download, preprocessing, and training pipeline (128-64-32 architecture).
+      responses:
+        202:
+          description: Training successfully started in the background.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "accepted"
+                  message:
+                    type: string
+                    example: "High-sensitivity training started in the background."
+  /predict:
+    post:
+      summary: Predict train delay
+      description: |
+        Fetches live aggregated features from the external data management API and performs inference using the trained Keras model.
+        
+        **Validation Rules for `dateTime`:**
+        * Must be a valid ISO-8601 UTC timestamp.
+        * Cannot lie in the past.
+        * Cannot be more than 16 days in the future (due to weather forecast limitations).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eva
+                - line
+                - dateTime
+              properties:
+                eva:
+                  type: string
+                  description: 7-digit Deutsche Bahn station ID (EVA number).
+                  example: "8010131"
+                line:
+                  type: string
+                  description: Train line identifier.
+                  example: "RE1"
+                dateTime:
+                  type: string
+                  format: date-time
+                  description: Planned departure time in UTC (ISO-8601 format).
+                  example: "2026-07-20T14:30:00Z"
+      responses:
+        200:
+          description: Successfully computed the delay prediction.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  requested_input:
+                    type: object
+                  predicted_delay_minutes:
+                    type: number
+                    format: float
+                    example: 4.55
+        400:
+          description: Bad Request due to validation failure (missing fields, invalid format, or date out of bounds).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: High-level error type or summary.
+                    example: "Invalid dateTime"
+                  details:
+                    type: string
+                    description: Detailed explanation of why the validation failed.
+                    example: "The requested departure time lies in the past. Predictions are only available for future trips."
+        500:
+          description: Internal server error or failure during external API feature aggregation.

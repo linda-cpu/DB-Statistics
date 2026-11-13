@@ -1,0 +1,16 @@
+# Ignore local python caches and virtual environments
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local build or IDE artifacts
+.git/
+.vscode/
+.idea/
+
+# Optional: Ignore your huge local CSV training data if you want the container 
+# to download it freshly via ImportService during the first /train run.
+# If you want to ship the image WITH the current CSV, comment out the line below:
+# resources/bahndaten_training.csv

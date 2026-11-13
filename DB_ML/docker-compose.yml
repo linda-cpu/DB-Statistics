@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  delay-prediction-service:
+    build: .
+    image: db-ml-service  # If you pushed it to a registry, use your registry tag here
+    container_name: db-ml-app
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_BASE_URL=http://193.174.103.35:8081
+      - DB_API_KEY=7d5e9153-8e7f-4002-9add-35313daa7005  # Your master key
+      - DB_CSV_PATH=resources/bahndaten_training.csv
+    volumes:
+      # CRITICAL: Mount the models directory to the VM host.
+      # This ensures that when the daily training runs at 23:00, the generated 
+      # .keras and .pkl files are safely saved on the VM's hard drive 
+      # and won't be lost if the container restarts!
+      - ./models:/app/resources/models
+    restart: always
