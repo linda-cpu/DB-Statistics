@@ -1,14 +1,12 @@
 import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { User } from '../../models/user';
-import { environment } from '../../../environments/environment.development';
-import { HttpClient } from '@angular/common/http';
+import { HttpService } from '../../services/http-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TripService {
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
+  private http = inject(HttpService);
 
   userCache: Map<string, User | null> = new Map();
   getAnnotationSourceDisplay(source: string): WritableSignal<string> {
@@ -47,7 +45,7 @@ export class TripService {
       }
 
       try {
-        this.http.get<User>(`${this.apiUrl}/users/${userId}`).subscribe((user: User) => {
+        this.http.getUserById(Number(userId)).subscribe((user: User) => {
           if (user.username && user) {
             name.set(user.username);
           }

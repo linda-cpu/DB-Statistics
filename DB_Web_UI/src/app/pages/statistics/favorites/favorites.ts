@@ -2,10 +2,9 @@ import { Component, inject, OnInit, signal, WritableSignal } from '@angular/core
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { Config } from '../../../models/config';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment.development';
 import { Station } from '../../../models/station';
 import { Router } from '@angular/router';
+import { HttpService } from '../../../services/http-service';
 
 @Component({
   selector: 'app-favourites',
@@ -14,9 +13,8 @@ import { Router } from '@angular/router';
   styleUrl: './favorites.css',
 })
 export class Favorites implements OnInit {
-  private http = inject(HttpClient);
+  private http = inject(HttpService);
   private router = inject(Router);
-  apiUrl: string = environment.apiUrl;
   favorites: WritableSignal<Config[]> = signal([]);
   stationNames = signal<Record<number, string>>({});
 
@@ -25,7 +23,7 @@ export class Favorites implements OnInit {
   }
 
   loadAllFavorites() {
-    this.http.get<Config[]>(this.apiUrl + '/statistics/configs').subscribe((data) => {
+    this.http.getMyFavoriteConfigs().subscribe((data) => {
       this.favorites.set(data);
       data.forEach((fav) => {
         if (fav.stationEva) {
@@ -54,7 +52,7 @@ export class Favorites implements OnInit {
   }
 
   deleteFavorite(id: number) {
-    this.http.delete(`${this.apiUrl}/statistics/configs/${id}`).subscribe(() => {
+    this.http.deleteFavoriteConfig(id).subscribe(() => {
       next: this.loadAllFavorites();
       error: (err: any) => console.error('Fehler beim Laden der Favoriten', err);
     });
@@ -62,7 +60,7 @@ export class Favorites implements OnInit {
 
   private resolveStationName(eva: number) {
     if (!this.stationNames()[eva]) {
-      this.http.get<Station>(`${this.apiUrl}/stations/${eva}`).subscribe((data) => {
+      this.http.getStationDetails(eva).subscribe((data) => {
         this.stationNames.update((names) => ({ ...names, [eva]: data.name }));
       });
     }

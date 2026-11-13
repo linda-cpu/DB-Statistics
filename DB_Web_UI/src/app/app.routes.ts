@@ -7,6 +7,8 @@ import { UserComponent } from './pages/users/user/user';
 import { Favorites } from './pages/statistics/favorites/favorites';
 import { Trips } from './pages/data/trips/trips';
 import { Import } from './pages/import/import';
+import { Disruptions } from './pages/data/disruptions/disruptions';
+import { Prediction } from './pages/prediction/prediction';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -19,9 +21,11 @@ export const routes: Routes = [
       { path: 'statistics', component: Statistics },
       { path: 'statistics/favorites', component: Favorites },
       { path: 'admin/trips', component: Trips },
+      { path: 'admin/disruptions', component: Disruptions },
       { path: 'admin/import', component: Import},
       { path: 'profile', component: UserComponent },
-      { path: '', redirectTo: 'statistics', pathMatch: 'full' },
+      { path: 'prediction', component: Prediction },
+      { path: '', redirectTo: 'statistics', pathMatch: 'full' }
     ]
   },
 

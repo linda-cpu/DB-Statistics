@@ -1,11 +1,10 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FileSelectEvent, FileUploadHandlerEvent, FileUploadModule, FileUpload } from 'primeng/fileupload';
-import { environment } from '../../../environments/environment.development';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { lastValueFrom } from 'rxjs';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { HttpService } from '../../services/http-service';
 
 @Component({
   selector: 'app-import',
@@ -15,9 +14,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
   styleUrl: './import.css',
 })
 export class Import {
-  private http = inject(HttpClient);
+  private http = inject(HttpService);
   private messageService = inject(MessageService);
-  apiUrl: string = environment.apiUrl;
   hasFiles: boolean = false;
   uploading: WritableSignal<boolean> = signal(false);
   totalFilesCount = signal<number>(0);
@@ -26,7 +24,6 @@ export class Import {
 
   onSelect($event: FileSelectEvent) {
     this.hasFiles = $event.files.length > 0;
-    console.log('Ausgewählte Dateien:', $event.currentFiles);
   }
   removeFile(file: File, allFiles: File[]) {
     const index = allFiles.indexOf(file);
@@ -71,7 +68,7 @@ export class Import {
 
   async uploadXMLFiles(formData: FormData): Promise<boolean> {
     try{
-      await lastValueFrom(this.http.post(this.apiUrl + '/imports/xml', formData));
+      await lastValueFrom(this.http.uploadXMLFiles(formData));
       return true
     }
     catch{

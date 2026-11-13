@@ -1,0 +1,95 @@
+<p-toast />
+<div class="p-6 min-h-screen">
+  <div class="flex items-center gap-4 mb-6">
+    <i class="pi pi-exclamation-triangle text-[#f01414] text-3xl"></i>
+    <h2 class="text-2xl font-bold">Streik melden</h2>
+  </div>
+
+  <p-panel styleClass="mb-6 shadow-sm">
+    <!-- Form-Gruppe zugewiesen -->
+    <form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+
+      <!-- Zeitraum (Von - Bis inkl. Uhrzeit) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+          <label for="startTime" class="font-semibold text-sm text-gray-700">Beginn *</label>
+          <p-datePicker
+            id="startTime"
+            formControlName="startTime"
+            [showTime]="true"
+            [showIcon]="true"
+            iconDisplay="input"
+            dateFormat="dd.mm.yy"
+            placeholder="Startdatum und Zeit"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="endTime" class="font-semibold text-sm text-gray-700">Ende *</label>
+          <p-datePicker
+            id="endTime"
+            formControlName="endTime"
+            [showTime]="true"
+            [showIcon]="true"
+            iconDisplay="input"
+            dateFormat="dd.mm.yy"
+            placeholder="Enddatum und Zeit"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Betroffene Linien -->
+      <div class="flex flex-col gap-2">
+        <label for="lines" class="font-semibold text-sm text-gray-700">Betroffene Linien</label>
+        <p-multiSelect
+          id="lines"
+          formControlName="affectedLines"
+          [group]="true"
+          styleClass="w-full"
+          [options]="allLines()"
+        />
+      </div>
+
+      <!-- Beschreibung -->
+      <div class="flex flex-col gap-2">
+        <label for="description" class="font-semibold text-sm text-gray-700">Beschreibung *</label>
+        <textarea
+          id="description"
+          pTextarea
+          formControlName="description"
+          rows="5"
+          styleClass="w-full"
+          [class.ng-invalid]="reportForm.controls.description.invalid && reportForm.controls.description.touched"
+        ></textarea>
+        @if (reportForm.controls.description.invalid && reportForm.controls.description.touched) {
+          <small class="text-red-500 font-medium">Eine Beschreibung ist erforderlich.</small>
+        }
+      </div>
+
+      <!-- Button-Leiste -->
+      <div class="flex justify-end gap-3 mt-4">
+        <button
+          type="button"
+          class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm font-medium"
+          (click)="resetForm()"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium shadow flex items-center gap-2"
+          [disabled]="submitting() || reportForm.invalid"
+        >
+          @if (submitting()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+            <i class="pi pi-send"></i>
+          }
+          Meldung abschicken
+        </button>
+      </div>
+    </form>
+  </p-panel>
+</div>

@@ -1,7 +1,6 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -9,6 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../core/auth-service';
 import { environment } from '../../../../environments/environment.development';
 import { AuthResponse } from '../../../models/authResponse';
+import { HttpService } from '../../../services/http-service';
 
 @Component({
   selector: 'app-register',
@@ -17,8 +17,7 @@ import { AuthResponse } from '../../../models/authResponse';
   styleUrl: './register.css',
 })
 export class Register {
-  private http = inject(HttpClient);
-  private router = inject(Router);
+  private http = inject(HttpService);
   private authService = inject(AuthService);
   private ApiURL = environment.apiUrl;
 
@@ -26,8 +25,7 @@ export class Register {
   password = '';
 
   onRegister() {
-    console.log('Versuche Registrierung mit', this.username, this.password);
-    this.http.post<AuthResponse>(`${this.ApiURL}/auth/register`, {
+    this.http.register({
       username: this.username,
       password: this.password
     }).subscribe({

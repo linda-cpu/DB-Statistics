@@ -42,15 +42,18 @@ export class Navbar {
         visible: this.authService.isAdmin(),
       },
       {
-        label: 'Trips einsehen',
-        icon: 'pi pi-map',
-        routerLink: '/admin/trips',
-        visible: this.authService.isAdmin(),
+        label: 'Verspätungsvorhersage',
+        icon: 'pi pi-sparkles',
+        routerLink: '/prediction',
       },
       {
-        label: 'Import',
-        icon: 'pi pi-file-import',
-        routerLink: '/admin/import',
+        label: 'Daten',
+        icon: 'pi pi-database',
+        items: [
+          { label: 'Trips einsehen', icon: 'pi pi-map', routerLink: '/admin/trips'},
+          { label: 'Streik melden', icon: 'pi pi-bolt', routerLink: '/admin/disruptions'},
+          { label: 'Import', icon: 'pi pi-file-import', routerLink: '/admin/import'}
+        ],
         visible: this.authService.isAdmin(),
       },
     ];

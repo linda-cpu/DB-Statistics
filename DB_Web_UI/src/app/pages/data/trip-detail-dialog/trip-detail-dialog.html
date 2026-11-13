@@ -132,7 +132,6 @@
             icon="pi pi-plus"
             size="small"
             [outlined]="true"
-            severity="success"
             (onClick)="createAnnotation()"
           />
         </div>
@@ -205,12 +204,16 @@
       <textarea
         id="annotationText"
         pInputTextarea
-        [(ngModel)]="annotationText"
+        [formControl]="annotationControl"
         rows="5"
         class="w-full"
         placeholder="Anmerkungstext eingeben..."
         [autofocus]="true"
+        [class.ng-invalid]="annotationControl.invalid && annotationControl.touched"
       ></textarea>
+      @if (annotationControl.invalid && annotationControl.touched) {
+        <small class="text-red-500 font-medium block mt-1">Bitte gib einen Text für die Anmerkung ein.</small>
+      }
     </div>
 
     @if (annotationDialogMode === 'create') {
@@ -232,7 +235,7 @@
       [label]="annotationDialogMode === 'create' ? 'Erstellen' : 'Speichern'"
       [icon]="annotationDialogMode === 'create' ? 'pi pi-plus' : 'pi pi-check'"
       (onClick)="saveAnnotation()"
-      [disabled]="!annotationText.trim() || loading()"
+      [disabled]="annotationControl.invalid || loading()"
     />
   </ng-template>
 </p-dialog>

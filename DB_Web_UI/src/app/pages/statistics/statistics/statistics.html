@@ -10,7 +10,7 @@
       <button
         class="p-panel-header-icon p-link mr-2"
         (click)="saveAsFavorite()"
-        aria-label="Als Favorit speichern"
+        aria-label="Als Favorit保存"
       >
         @if (!isHeartAnimating()) {
           <i class="pi pi-heart text-gray-500 hover:text-[#f01414]"></i>
@@ -19,20 +19,19 @@
         }
       </button>
     </ng-template>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-2">
+
+    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-2">
       <div class="flex flex-col gap-2">
         <label class="font-bold text-gray-700 text-sm">Bahnhof *</label>
         <p-select
           filter="true"
           filterBy="name"
           [options]="allStations()"
-          (onChange)="loadLines()"
           optionLabel="name"
           optionValue="eva"
-          [(ngModel)]="filter.station"
+          formControlName="station"
           styleClass="w-full"
           inputStyleClass="w-full"
-          required="true"
         >
         </p-select>
       </div>
@@ -45,10 +44,9 @@
             { label: 'Top verzögerte Linien', value: 'TOP_DELAYED_LINES' },
             { label: 'Top Verspätungsgründe', value: 'TOP_DELAY_REASONS' },
           ]"
-          [(ngModel)]="filter.statType"
+          formControlName="statType"
           styleClass="w-full"
           inputStyleClass="w-full"
-          required="true"
         >
         </p-select>
       </div>
@@ -56,9 +54,10 @@
       <div class="flex flex-col gap-2">
         <label class="font-bold text-gray-700 text-sm">Zeitraum</label>
         <p-datepicker
-          [(ngModel)]="filter.range"
+          formControlName="range"
           selectionMode="range"
           [showIcon]="true"
+          [showClear]="true"
           placeholder="TT.MM.JJJJ - TT.MM.JJJJ"
           dateFormat="dd.mm.yy"
           [maxDate]="today"
@@ -68,14 +67,14 @@
         </p-datepicker>
       </div>
 
-      @if (filter.statType === 'DELAY_HISTORY') {
+      @if (filterForm.controls.statType.value === 'DELAY_HISTORY') {
         <div class="flex flex-col gap-2">
           <label class="font-bold text-gray-700 text-sm">Linie</label>
           <p-select
             filter="true"
             filterBy="name"
             [options]="allLines()"
-            [(ngModel)]="filter.line"
+            formControlName="line"
             styleClass="w-full"
             inputStyleClass="w-full"
             [showClear]="true"
@@ -84,42 +83,39 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-bold text-gray-700 text-sm">Metrik</label>
+          <label class="font-bold text-gray-700 text-sm">Metrik *</label>
           <p-select
-            filter="true"
-            filterBy="name"
             [options]="allMetrics"
-            [(ngModel)]="filter.metric"
+            formControlName="metric"
             styleClass="w-full"
             inputStyleClass="w-full"
-            required="true"
           >
           </p-select>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-bold text-gray-700 text-sm">Intervall</label>
+          <label class="font-bold text-gray-700 text-sm">Intervall *</label>
           <p-select
-            filter="true"
-            filterBy="name"
             [options]="allIntervalls"
-            [(ngModel)]="filter.intervall"
+            formControlName="intervall"
             styleClass="w-full"
             inputStyleClass="w-full"
-            required="true"
           >
           </p-select>
         </div>
       }
 
-      @if (filter.statType === 'TOP_DELAYED_LINES' || filter.statType === 'TOP_DELAY_REASONS') {
+      @if (
+        filterForm.controls.statType.value === 'TOP_DELAYED_LINES' ||
+        filterForm.controls.statType.value === 'TOP_DELAY_REASONS'
+      ) {
         <div class="flex flex-col gap-2">
-          <label class="font-bold text-gray-700 text-sm">Limit</label>
+          <label class="font-bold text-gray-700 text-sm">Limit *</label>
           <p-inputnumber
             inputId="integeronly"
             [min]="1"
             [showButtons]="true"
-            [(ngModel)]="filter.limit"
+            formControlName="limit"
           />
         </div>
       }
@@ -129,17 +125,15 @@
           label="Statistik generieren"
           icon="pi pi-search"
           (onClick)="generateStatistics()"
-          styleClass="w-full !bg-[#f01414] !border-none py-2.5"
-          [disabled]="!filter.station || !filter.statType || isLoading()"
+          styleClass="w-full py-2.5"
+          [disabled]="filterForm.invalid || isLoading()"
           [pTooltip]="
-            !filter.station || !filter.statType
-              ? 'Bitte füllen Sie alle mit * markierten Felder aus'
-              : ''
+            filterForm.invalid ? 'Bitte füllen Sie alle markierten Pflichtfelder aus' : ''
           "
         >
         </p-button>
       </div>
-    </div>
+    </form>
   </p-panel>
 
   @if (isLoading()) {
@@ -174,22 +168,26 @@
               <p-table [value]="statSummary()" styleClass="p-datatable-sm">
                 <ng-template #header>
                   <tr>
-                    @if (filter2.statType === 'TOP_DELAY_REASONS') {
+                    @if (activeQuerySnapshot?.statType === 'TOP_DELAY_REASONS') {
                       <th>Code</th>
                       <th>Anzahl</th>
                       <th>Grund</th>
                     }
-
-                    @if (filter2.statType === 'TOP_DELAYED_LINES') {
+                    @if (activeQuerySnapshot?.statType === 'TOP_DELAYED_LINES') {
                       <th>Linie</th>
                       <th>Anzahl</th>
                     }
-
-                    @if (filter2.statType === 'DELAY_HISTORY' && filter2.metric === 'COUNT') {
+                    @if (
+                      activeQuerySnapshot?.statType === 'DELAY_HISTORY' &&
+                      activeQuerySnapshot?.metric === 'COUNT'
+                    ) {
                       <th>Zeitraum</th>
                       <th>Anzahl</th>
                     }
-                    @if (filter2.statType === 'DELAY_HISTORY' && filter2.metric === 'PERCENT') {
+                    @if (
+                      activeQuerySnapshot?.statType === 'DELAY_HISTORY' &&
+                      activeQuerySnapshot?.metric === 'PERCENT'
+                    ) {
                       <th>Zeitraum</th>
                       <th>Prozent</th>
                     }
@@ -197,21 +195,27 @@
                 </ng-template>
                 <ng-template #body let-item>
                   <tr>
-                    <td>
-                      @if (filter2.statType === 'DELAY_HISTORY') {
+                    <td class="align-middle">
+                      @if (
+                        activeQuerySnapshot?.statType === 'DELAY_HISTORY' &&
+                        activeQuerySnapshot?.intervall === 'DAILY'
+                      ) {
                         {{ item.label | date: 'dd.MM.yyyy' }}
                       } @else {
                         {{ item.label }}
                       }
                     </td>
                     <td class="font-bold text-right">
-                      @if (filter2.metric === 'PERCENT' && filter2.statType === 'DELAY_HISTORY') {
-                        {{ item.value | number: '2.2' }}%
+                      @if (
+                        activeQuerySnapshot?.metric === 'PERCENT' &&
+                        activeQuerySnapshot?.statType === 'DELAY_HISTORY'
+                      ) {
+                        {{ item.value | number: '1.2-2' }}%
                       } @else {
                         {{ item.value }}
                       }
                     </td>
-                    @if (filter2.statType === 'TOP_DELAY_REASONS') {
+                    @if (activeQuerySnapshot?.statType === 'TOP_DELAY_REASONS') {
                       <td>{{ item.description }}</td>
                     }
                   </tr>

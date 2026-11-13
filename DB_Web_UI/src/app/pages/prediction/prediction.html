@@ -1,0 +1,160 @@
+<div [formGroup]="predictionForm" class="p-6 min-h-screen">
+
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+      <div class="flex items-center gap-4">
+        <i class="pi pi-bolt text-[#f01414] text-3xl"></i>
+        <h1 class="text-2xl font-bold text-gray-800">KI-Verspätungsvorhersage</h1>
+      </div>
+      <p class="text-gray-500">Prognostiziere Verspätungen für zukünftige Fahrten mittels künstlicher Intelligenz.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-1">
+      <p-card header="Vorhersage-Kriterien" styleClass="shadow-sm">
+        <div class="flex flex-col gap-4">
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-gray-600">Bahnhof:</label>
+            <p-select
+              [options]="allStations()"
+              formControlName="selectedStationEva"
+              optionLabel="name"
+              optionValue="eva"
+              [filter]="true"
+              filterBy="name"
+              placeholder="Bahnhof suchen..."
+              styleClass="w-full"
+            >
+            </p-select>
+            @if (predictionForm.controls.selectedStationEva.touched && predictionForm.controls.selectedStationEva.invalid) {
+              <small class="text-red-500">Bitte wählen Sie einen Startbahnhof aus.</small>
+            }
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <label class="text-sm font-semibold text-gray-600">Linie / Zug:</label>
+              @if (isLoadingLines()) {
+                <i class="pi pi-spin pi-spinner text-xs text-[#f01414]"></i>
+              }
+            </div>
+
+            <p-select
+              [options]="availableLines()"
+              formControlName="line"
+              [placeholder]="predictionForm.controls.selectedStationEva.value ? 'Linie wählen...' : 'Zuerst Bahnhof wählen...'"
+              styleClass="w-full"
+              [filter]="true"
+              [emptyMessage]="'Keine Linien gefunden'"
+            >
+            </p-select>
+
+            @if (predictionForm.controls.line.touched && predictionForm.controls.line.invalid) {
+              <small class="text-red-500">Wählen Sie eine Linie aus.</small>
+            }
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-gray-600">Geplante Abfahrt:</label>
+            <p-datepicker
+              formControlName="dateTime"
+              [showTime]="true"
+              hourFormat="24"
+              dateFormat="dd.mm.yy"
+              placeholder="Datum & Uhrzeit wählen"
+              styleClass="w-full"
+            >
+            </p-datepicker>
+            <span class="text-xs text-gray-400 mt-1">
+              Hinweis: Vorhersagen sind nur für zukünftige Verbindungen (max. 16 Tage in der Zukunft) möglich.
+            </span>
+          </div>
+
+          <div class="mt-2">
+            <p-button
+              label="Prognose berechnen"
+              icon="pi pi-sparkles"
+              styleClass="w-full p-button-danger"
+              [loading]="isLoading()"
+              [disabled]="predictionForm.invalid"
+              (onClick)="onSubmit()"
+            />
+          </div>
+
+        </div>
+      </p-card>
+    </div>
+
+    <div class="lg:col-span-2 flex flex-col gap-6">
+
+      @if (isLoading()) {
+        <p-card styleClass="shadow-sm text-center py-12">
+          <i class="pi pi-spin pi-spinner text-4xl text-[#f01414] mb-4"></i>
+          <h3 class="text-lg font-bold text-gray-700">Analysiere Wetterdaten & Streckenverkehr...</h3>
+          <p class="text-gray-400">Das neuronale Netz berechnet das wahrscheinlichste Szenario.</p>
+        </p-card>
+      }
+
+      @if (errorMessage()) {
+        <p-card styleClass="shadow-sm border-l-4 border-red-500">
+          <div class="flex items-start gap-4">
+            <i class="pi pi-exclamation-triangle text-red-500 text-3xl"></i>
+            <div>
+              <h3 class="text-lg font-bold text-red-600">Berechnung fehlgeschlagen</h3>
+              <p class="text-gray-700 mt-1">{{ errorMessage() }}</p>
+            </div>
+          </div>
+        </p-card>
+      }
+
+      @if (predictionResult(); as result) {
+        <p-card header="Berechnung abgeschlossen" styleClass="shadow-sm">
+          <div class="flex flex-col md:flex-row items-center gap-6 p-6 rounded-lg border"
+               [ngClass]="getSeverityClass(result.predictedDelayMinutes)">
+
+            <div class="text-center md:text-left flex-1">
+              <span class="text-xs uppercase font-bold tracking-wider opacity-75">Prognostizierte Verspätung</span>
+              <div class="text-5xl font-extrabold my-2">
+                {{ result.predictedDelayMinutes | number: '1.2-2' }} <span class="text-2xl font-semibold">Min.</span>
+              </div>
+              <span class="text-sm font-medium">
+                @if (result.predictedDelayMinutes < 3) {
+                  Dieser Zug wird pünktlich erwartet.
+                } @else if (result.predictedDelayMinutes < 8) {
+                  Achtung: Leichte Verzögerungen auf der Strecke sind wahrscheinlich.
+                } @else {
+                  Warnung: Hohes Risiko für eine signifikante Verspätung.
+                }
+              </span>
+            </div>
+
+            <div class="flex flex-col items-end gap-2 text-right border-t md:border-t-0 md:border-l border-gray-300 pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
+              <span class="text-xs font-semibold uppercase opacity-75">Eingabewerte</span>
+              <span class="font-mono text-sm">Station: {{ result.requestedInput?.eva }}</span>
+              <span class="font-bold text-[#f01414] bg-white border border-red-200 px-2 py-0.5 rounded text-xs">
+                Linie: {{ result.requestedInput?.line }}
+              </span>
+              <span class="text-xs text-gray-500">
+                Zeit: {{ result.requestedInput?.dateTime | date: 'dd.MM.yyyy HH:mm' : 'UTC' }}
+              </span>
+            </div>
+          </div>
+        </p-card>
+      }
+
+      @if (!isLoading() && !predictionResult() && !errorMessage()) {
+        <p-card styleClass="shadow-sm text-center py-16 bg-gray-50 border-dashed border-2 border-gray-200">
+          <i class="pi pi-chart-line text-5xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl font-bold text-gray-600">Bereit zur Vorhersage</h3>
+          <p class="text-gray-400 max-w-md mx-auto mt-2">
+            Wähle links den gewünschten Bahnhof, die Linie und den Abfahrtszeitpunkt aus. Die KI prognostiziert das Verspätungsrisiko unter Einbeziehung von Wetterdaten und historischen Fahrtmustern.
+          </p>
+        </p-card>
+      }
+
+    </div>
+  </div>
+</div>

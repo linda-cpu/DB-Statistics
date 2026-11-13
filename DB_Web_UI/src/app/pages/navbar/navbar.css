@@ -1,1 +1,19 @@
+:host {
+  display: block;
+  width: 100%;
+}
 
+::ng-deep .p-menubar {
+  width: 100%;
+  border-radius: 0; /* Ecken abrunden entfernen für volle Breite */
+  border: none; /* Standard-Rahmen von PrimeNG entfernen */
+  border-bottom: 2px solid #e2e8f0; /* Der gewünschte Strich unten */
+  padding: 0.5rem 1rem;
+  background: #ffffff; /* Hintergrund explizit setzen */
+  margin-bottom: 2rem; /* Abstand zum Content */
+}
+
+.navbar-logo {
+  margin-right: 1.5rem;
+  display: block;
+}

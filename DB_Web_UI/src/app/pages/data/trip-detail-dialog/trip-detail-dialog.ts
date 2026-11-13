@@ -1,19 +1,33 @@
-import { Component, EventEmitter, inject, Input, Output, signal, WritableSignal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+  signal,
+  WritableSignal,
+} from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { Trip } from '../../../models/trip';
 import { Annotations } from '../../../models/annotations';
-import { DatePipe } from '@angular/common';
+import { DatePipe, CommonModule } from '@angular/common';
 import { User } from '../../../models/user';
-import { environment } from '../../../../environments/environment.development';
-import { HttpClient } from '@angular/common/http';
 import { TripService } from '../trip-service';
+import { HttpService } from '../../../services/http-service';
 
 @Component({
   selector: 'app-trip-detail-dialog',
-  imports: [ButtonModule, DialogModule, FormsModule, DatePipe, TextareaModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    DialogModule,
+    TextareaModule,
+  ],
   providers: [DatePipe],
   templateUrl: './trip-detail-dialog.html',
   styleUrl: './trip-detail-dialog.css',
@@ -26,11 +40,10 @@ export class TripDetailDialog {
   @Output() visibleChange = new EventEmitter<boolean>();
 
   private tripService = inject(TripService);
-  private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
+  private http = inject(HttpService);
+  private fb = inject(FormBuilder); // FormBuilder für reaktive Steuerelemente
 
   showAnnotationDialog: WritableSignal<boolean> = signal(false);
-  annotationText: string = '';
   annotationDialogMode: 'create' | 'edit' = 'create';
   editingAnnotation: Annotations | null = null;
   loading: WritableSignal<boolean> = signal(false);
@@ -38,14 +51,16 @@ export class TripDetailDialog {
   userCache: Map<string, User | null> = new Map();
   currentUserId: string = localStorage.getItem('id') || '';
 
+  // Das reaktive FormControl für das Textfeld
+  annotationControl = this.fb.control('', [Validators.required]);
+
   onDialogHide() {
-    console.log('Dialog geschlossen');
     this.visibleChange.emit(false);
   }
 
   closeDetailDialog() {
     this.visible = false;
-    this.visibleChange.emit(false); // Wichtig: emit das Event
+    this.visibleChange.emit(false);
     this.selectedTrip.set(null);
   }
 
@@ -56,28 +71,33 @@ export class TripDetailDialog {
 
   createAnnotation() {
     this.annotationDialogMode = 'create';
-    this.showAnnotationDialog.set(true);
-    this.annotationText = '';
+    this.annotationControl.setValue(''); // Textfeld leeren
+    this.annotationControl.markAsPristine();
     this.editingAnnotation = null;
+    this.showAnnotationDialog.set(true);
   }
 
   editAnnotation(annotation: Annotations) {
     this.annotationDialogMode = 'edit';
     this.editingAnnotation = annotation;
-    this.annotationText = annotation.text;
+    this.annotationControl.setValue(annotation.text); // Bestehenden Text ins Control laden
+    this.annotationControl.markAsPristine();
     this.showAnnotationDialog.set(true);
   }
 
   saveAnnotation() {
+    // Falls das Textfeld leer oder ungültig ist, brechen wir ab
+    if (this.annotationControl.invalid) return;
+
+    // trimmen den Text, um reine Leerzeichen-Eingaben abzufangen
+    const textValue = this.annotationControl.value?.trim() || '';
+    if (!textValue) return;
+
     this.loading.set(true);
+
     if (this.annotationDialogMode === 'create') {
       this.http
-        .post<Annotations>(
-          `${this.apiUrl}/stations/${this.selectedStationEva}/trips/${this.selectedTrip()!.id}/annotations`,
-          {
-            text: this.annotationText,
-          },
-        )
+        .createAnnotation(this.selectedStationEva, this.selectedTrip()!.id, textValue)
         .subscribe({
           next: (annotation: Annotations) => {
             if (this.selectedTrip()) {
@@ -92,23 +112,15 @@ export class TripDetailDialog {
           },
         });
     } else if (this.annotationDialogMode === 'edit' && this.editingAnnotation) {
-      const updatedAnnotation = {
-        text: this.annotationText,
-      };
-
       this.http
-        .patch(
-          `${this.apiUrl}/stations/${this.selectedStationEva}/trips/${this.selectedTrip()!.id}/annotations/${this.editingAnnotation.id}`,
-          updatedAnnotation,
-        )
+        .updateAnnotation(this.selectedStationEva, this.selectedTrip()!.id, this.editingAnnotation.id, textValue)
         .subscribe({
           next: () => {
-            console.log('Annotation aktualisiert');
             if (this.selectedTrip()) {
               const trip = this.selectedTrip()!;
               const index = trip.annotations.findIndex((a) => a.id === this.editingAnnotation!.id);
               if (index !== -1) {
-                trip.annotations[index].text = this.annotationText;
+                trip.annotations[index].text = textValue;
                 trip.annotations[index].changed_datetime = new Date().toISOString();
               }
             }
@@ -126,7 +138,7 @@ export class TripDetailDialog {
     this.loading.set(false);
     this.showAnnotationDialog.set(false);
     this.editingAnnotation = null;
-    this.annotationText = '';
+    this.annotationControl.setValue('');
   }
 
   get annotationDialogTitle(): string {
@@ -140,10 +152,7 @@ export class TripDetailDialog {
       return;
     }
 
-    this.http
-      .delete(
-        `${this.apiUrl}/stations/${this.selectedStationEva}/trips/${this.selectedTrip()!.id}/annotations/${annotation.id}`,
-      )
+    this.http.deleteAnnotation(this.selectedStationEva, this.selectedTrip()!.id, annotation.id)
       .subscribe({
         next: () => {
           if (this.selectedTrip()) {

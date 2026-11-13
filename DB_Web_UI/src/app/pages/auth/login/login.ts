@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -9,6 +8,8 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth-service';
 import { AuthResponse } from '../../../models/authResponse';
+import { HttpService } from '../../../services/http-service';
+import { User } from '../../../models/user';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +18,7 @@ import { AuthResponse } from '../../../models/authResponse';
   styleUrl: './login.css',
 })
 export class Login {
-  private http = inject(HttpClient);
+  private http = inject(HttpService);
   private router = inject(Router);
   private authService = inject(AuthService);
   private ApiURL = environment.apiUrl;
@@ -26,11 +27,8 @@ export class Login {
   password = '';
 
   onLogin() {
-    console.log('Versuche Login mit', this.username, this.password);
-    this.http.post<AuthResponse>(`${this.ApiURL}/auth/login`, {
-      username: this.username,
-      password: this.password
-    }).subscribe({
+    const user: User = { username: this.username, password: this.password };
+    this.http.login(user).subscribe({
       next: (response: AuthResponse) => {
         this.authService.login(response.id, response.token, response.role);
       },

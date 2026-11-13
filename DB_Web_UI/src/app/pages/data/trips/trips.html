@@ -1,4 +1,4 @@
-<div class="p-6 min-h-screen">
+<div [formGroup]="tripsForm" class="p-6 min-h-screen">
   <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
     <div>
       <div class="flex items-center gap-4">
@@ -12,23 +12,22 @@
       <label class="text-sm font-semibold text-gray-600">Bahnhof auswählen:</label>
       <p-select
         [options]="allStations()"
-        [(ngModel)]="selectedStationEva"
+        formControlName="selectedStationEva"
         optionLabel="name"
         optionValue="eva"
         [filter]="true"
         filterBy="name"
-        (onChange)="loadTrips()"
         placeholder="Bahnhof suchen..."
         class="w-full md:w-80"
       >
       </p-select>
     </div>
+
     <div class="flex items-center gap-2 ml-4">
       <p-checkbox
-        [(ngModel)]="onlyOwnAnnotations"
+        formControlName="onlyOwnAnnotations"
         [binary]="true"
         inputId="ownAnn"
-        (onChange)="loadTrips()"
       >
       </p-checkbox>
       <label for="ownAnn" class="text-sm font-semibold text-gray-600">
@@ -52,7 +51,7 @@
       [rowsPerPageOptions]="[10, 25, 50]"
       styleClass="p-datatable-striped p-datatable-sm"
       [loading]="isLoading()"
-      [lazy]="!onlyOwnAnnotations()"
+      [lazy]="!tripsForm.controls.onlyOwnAnnotations.value"
       (onLazyLoad)="onPageChange($event)"
     >
       <ng-template pTemplate="caption">
@@ -62,8 +61,7 @@
             <input
               pInputText
               type="text"
-              [(ngModel)]="lineSearch"
-              (input)="onLineSearch($any($event.target).value)"
+              formControlName="lineSearch"
               placeholder="Linie suchen (z.B. RE1)..."
             />
           </p-iconfield>
@@ -94,16 +92,12 @@
           </td>
           <td>
             @if (trip.train_info?.line) {
-              <span
-                class="bg-red-100 text-[#f01414] px-2 py-1 rounded text-xs font-bold border border-red-200"
-              >
+              <span class="bg-red-100 text-[#f01414] px-2 py-1 rounded text-xs font-bold border border-red-200">
                 {{ trip.train_info.line }}
               </span>
             } @else {
-              <span
-                class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs font-bold border border-gray-200"
-              >
-                {{ 'Unbekannt' }}
+              <span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs font-bold border border-gray-200">
+                Unbekannt
               </span>
             }
           </td>
@@ -153,7 +147,6 @@
 
 <app-trip-detail-dialog
   [selectedTrip]="selectedTrip"
-  [visible]="showDetailDialog()"
-  [selectedStationEva]="selectedStationEva"
-  (visibleChange)="showDetailDialog.set($event)"
+  [(visible)]="showDetailDialog"
+  [selectedStationEva]="tripsForm.controls.selectedStationEva.value || ''"
 ></app-trip-detail-dialog>
